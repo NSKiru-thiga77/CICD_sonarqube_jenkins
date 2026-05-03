@@ -4,6 +4,8 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "nsk7docker/demo-app"
+        SONAR_TOKEN = credentials('sonarqube')
+        SONAR_HOST_URL = 'http://100.24.19.77/:9000'
     }
 
     stages {
@@ -53,7 +55,33 @@ pipeline {
                 }
             }
         }
-
+        
+        stage('SonarQube Analysis') {
+            steps {
+                dir('SonarJenkins_CICD'){
+                withSonarQubeEnv('sonarserver') {
+                    sh '''
+                        sonar-scanner \
+                        -Dsonar.projectKey=demo-check \
+                        -Dsonar.projectName="SonarQube Jenkins CICD" \
+                        -Dsonar.projectVersion=1.0 \
+                        -Dsonar.sources=src/main/java \
+                        -Dsonar.login=$SONAR_TOKEN
+                    '''
+                    }
+                }
+            }
+        }
+        
+        stage('Quality Gate') {
+            steps {
+                dir('SonarJenkins_CICD'){
+                timeout(time: 2, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                   }
+                }
+            }
+        }
 
         stage('Build Docker Image') {
             steps {
@@ -66,7 +94,7 @@ pipeline {
         stage('Login to DockerHub') {
             steps {
                 dir('SonarJenkins_CICD'){
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-cred', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                     sh 'echo $PASS | docker login -u $USER --password-stdin'
                 }
                 }
@@ -77,6 +105,18 @@ pipeline {
             steps {
                 dir('SonarJenkins_CICD'){
                 sh 'docker push $DOCKER_IMAGE:tagsonar'
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                dir('SonarJenkins_CICD')  {
+                sh '''
+                docker stop demo || true
+                docker rm demo || true
+                docker run -d -p 8080:8080 --name demo $DOCKER_IMAGE:latest
+                '''
                 }
             }
         }
