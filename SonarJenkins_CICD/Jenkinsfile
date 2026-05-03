@@ -59,7 +59,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 dir('SonarJenkins_CICD'){
-                withSonarQubeEnv('sonarserver') {
+                withSonarQubeEnv('sonarqube_server') {
                     sh '''
                         sonar-scanner \
                         -Dsonar.projectKey=demo-check \
