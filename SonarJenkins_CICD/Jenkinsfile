@@ -11,11 +11,11 @@ pipeline {
     stages {
 
         stage('Pre-Clean Workspace') {
-           steps {
-               dir('SonarJenkins_CICD') {
-               cleanWs()
-               }
-           }
+            steps {
+                dir('SonarJenkins_CICD') {
+                    cleanWs()
+                }
+            }
         }
 
         stage('Checkout') {
@@ -26,47 +26,48 @@ pipeline {
 
         stage('Build') {
             steps {
-                dir('SonarJenkins_CICD'){
-                sh 'mvn clean package'
-                }   
+                dir('SonarJenkins_CICD') {
+                    sh 'mvn clean package'
+                }
             }
         }
 
         stage('Test') {
             steps {
-                dir('SonarJenkins_CICD'){
-                sh 'mvn test'
+                dir('SonarJenkins_CICD') {
+                    sh 'mvn test'
                 }
             }
         }
 
         stage('Package') {
             steps {
-                dir('SonarJenkins_CICD'){
-                sh 'mvn compile'
+                dir('SonarJenkins_CICD') {
+                    sh 'mvn compile'
                 }
             }
         }
         
         stage('Archive Artifacts') {
             steps {
-                dir('SonarJenkins_CICD'){
-                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                dir('SonarJenkins_CICD') {
+                    archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
                 }
             }
         }
         
         stage('SonarQube Analysis') {
             steps {
-                dir('SonarJenkins_CICD'){
-                withSonarQubeEnv('sonarqube_server') {
-                    withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_TOKEN')]) {
-                    sh '''
-                         mvn sonar:sonar \
-                         -Dsonar.projectKey=demotest \
-                         -Dsonar.host.url=$SONAR_HOST_URL \
-                         -Dsonar.login=$SONAR_TOKEN
-                    '''
+                dir('SonarJenkins_CICD') {
+                    withSonarQubeEnv('sonarqube_server') {
+                        withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_TOKEN')]) {
+                            sh '''
+                                mvn sonar:sonar \
+                                -Dsonar.projectKey=demotest \
+                                -Dsonar.host.url=$SONAR_HOST_URL \
+                                -Dsonar.login=$SONAR_TOKEN
+                            '''
+                        }
                     }
                 }
             }
@@ -74,48 +75,48 @@ pipeline {
         
         stage('Quality Gate') {
             steps {
-                dir('SonarJenkins_CICD'){
-                timeout(time: 2, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                   }
+                dir('SonarJenkins_CICD') {
+                    timeout(time: 2, unit: 'MINUTES') {
+                        waitForQualityGate abortPipeline: true
+                    }
                 }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                dir('SonarJenkins_CICD'){
-                sh 'docker build -t $DOCKER_IMAGE:tagsonar .'
+                dir('SonarJenkins_CICD') {
+                    sh 'docker build -t $DOCKER_IMAGE:tagsonar .'
                 }
             }
         }
 
         stage('Login to DockerHub') {
             steps {
-                dir('SonarJenkins_CICD'){
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-cred', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                    sh 'echo $PASS | docker login -u $USER --password-stdin'
-                }
+                dir('SonarJenkins_CICD') {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-cred', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                        sh 'echo $PASS | docker login -u $USER --password-stdin'
+                    }
                 }
             }
         } 
 
         stage('Push Docker Image') {
             steps {
-                dir('SonarJenkins_CICD'){
-                sh 'docker push $DOCKER_IMAGE:tagsonar'
+                dir('SonarJenkins_CICD') {
+                    sh 'docker push $DOCKER_IMAGE:tagsonar'
                 }
             }
         }
 
         stage('Deploy') {
             steps {
-                dir('SonarJenkins_CICD')  {
-                sh '''
-                docker stop demo || true
-                docker rm demo || true
-                docker run -d -p 8080:8080 --name demo $DOCKER_IMAGE:latest
-                '''
+                dir('SonarJenkins_CICD') {
+                    sh '''
+                        docker stop demo || true
+                        docker rm demo || true
+                        docker run -d -p 8080:8080 --name demo $DOCKER_IMAGE:latest
+                    '''
                 }
             }
         }
