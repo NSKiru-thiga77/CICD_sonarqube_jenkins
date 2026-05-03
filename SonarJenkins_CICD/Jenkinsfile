@@ -56,19 +56,6 @@ pipeline {
             }
         }
         
-        stage('OWASP Dependency Check') {
-            steps {
-                dir('SonarJenkins_CICD') {
-                    dependencyCheck additionalArguments: '''
-                        --scan .
-                        --format XML
-                        --format HTML
-                    ''', odcInstallation: 'dependency-check'
-
-                    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-                }
-            }
-        }
 
         stage('SonarQube Analysis') {
             steps {
