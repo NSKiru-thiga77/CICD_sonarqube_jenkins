@@ -105,8 +105,8 @@ pipeline {
             steps {
                 dir('SonarJenkins_CICD') {
                     sh '''
+                        docker rm -f demo || true
                         docker pull $DOCKER_IMAGE:tagsonar
-
                         docker run -d -p 8081:8080 --name demo $DOCKER_IMAGE:tagsonar
                     '''
                 }
