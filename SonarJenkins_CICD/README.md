@@ -1,0 +1,1 @@
+This project demonstrates a complete CI/CD pipeline where every code commit automatically triggers build, test, quality analysis, containerization, and deployment, ensuring faster and reliable software delivery
