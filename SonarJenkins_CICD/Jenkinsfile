@@ -106,9 +106,8 @@ pipeline {
                 dir('SonarJenkins_CICD') {
                     sh '''
                         docker pull $DOCKER_IMAGE:tagsonar
-                        docker stop demo || true
-                        docker rm demo || true
-                        docker run -d -p 8080:8080 --name demo $DOCKER_IMAGE:tagsonar
+
+                        docker run -d -p 8081:8080 --name demo $DOCKER_IMAGE:tagsonar
                     '''
                 }
             }
