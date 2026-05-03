@@ -56,6 +56,20 @@ pipeline {
             }
         }
         
+        stage('OWASP Dependency Check') {
+            steps {
+                dir('SonarJenkins_CICD') {
+                    dependencyCheck additionalArguments: '''
+                        --scan .
+                        --format XML
+                        --format HTML
+                    ''', odcInstallation: 'dependency-check'
+
+                    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                }
+            }
+        }
+
         stage('SonarQube Analysis') {
             steps {
                 dir('SonarJenkins_CICD') {
@@ -104,6 +118,7 @@ pipeline {
             steps {
                 dir('SonarJenkins_CICD') {
                     sh '''
+                        docker pull $DOCKER_IMAGE:latest
                         docker stop demo || true
                         docker rm demo || true
                         docker run -d -p 8080:8080 --name demo $DOCKER_IMAGE:latest
