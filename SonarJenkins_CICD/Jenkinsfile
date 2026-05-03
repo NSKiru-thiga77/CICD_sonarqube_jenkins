@@ -148,9 +148,6 @@ pipeline {
                 body: "Build ${env.BUILD_NUMBER} failed.\n${env.BUILD_URL}",
                 to: "kiruthiga.nan@gmail.com"
             )
-
-
         }
-        
     }
 }
