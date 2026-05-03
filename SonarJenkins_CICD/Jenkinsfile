@@ -2,10 +2,6 @@ pipeline {
 
     agent any
 
-     tools {
-        sonarScanner 'sonarqube8.1'   // MUST match Jenkins config name
-    }
-
     environment {
         DOCKER_IMAGE = "nsk7docker/demo-app"
         SONAR_TOKEN = credentials('sonarqube')
@@ -64,13 +60,12 @@ pipeline {
             steps {
                 dir('SonarJenkins_CICD'){
                 withSonarQubeEnv('sonarqube_server') {
+                    withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_TOKEN')]) {
                     sh '''
-                        sonar-scanner \
-                        -Dsonar.projectKey=demo-check \
-                        -Dsonar.projectName="SonarQube Jenkins CICD" \
-                        -Dsonar.projectVersion=1.0 \
-                        -Dsonar.sources=src/main/java \
-                        -Dsonar.login=$SONAR_TOKEN
+                         mvn sonar:sonar \
+                         -Dsonar.projectKey=demotest \
+                         -Dsonar.host.url=$SONAR_HOST_URL \
+                         -Dsonar.login=$SONAR_TOKEN
                     '''
                     }
                 }
