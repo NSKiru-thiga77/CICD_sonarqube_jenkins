@@ -2,6 +2,10 @@ pipeline {
 
     agent any
 
+     tools {
+        sonarScanner 'sonarqube8.1'   // MUST match Jenkins config name
+    }
+
     environment {
         DOCKER_IMAGE = "nsk7docker/demo-app"
         SONAR_TOKEN = credentials('sonarqube')
